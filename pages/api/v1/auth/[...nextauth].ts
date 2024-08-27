@@ -847,7 +847,7 @@ if (process.env.NEXT_PUBLIC_OAUTH_ENABLED === 'true') {
     {
       id: 'teleport',
       name: 'Teleport',
-      type: "oidc",
+      type: "oauth",
       issuer: 'dev.scribe.sh',
       wellKnown: 'https://dev.scribe.sh/.well-known/openid-configuration',
       jwks_endpoint: 'https://dev.scribe.sh/.well-known/jwks-oidc',
