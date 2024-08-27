@@ -45,6 +45,7 @@ import MailchimpProvider from "next-auth/providers/mailchimp";
 import MailRuProvider from "next-auth/providers/mailru";
 import NaverProvider from "next-auth/providers/naver";
 import NetlifyProvider from "next-auth/providers/netlify";
+import OAuthProvider from "next-auth/providers/oauth";
 import OktaProvider from "next-auth/providers/okta";
 import OneLoginProvider from "next-auth/providers/onelogin";
 import OssoProvider from "next-auth/providers/osso";
@@ -800,6 +801,71 @@ if (process.env.NEXT_PUBLIC_NETLIFY_ENABLED === "true") {
       clientSecret: process.env.NETLIFY_CLIENT_SECRET,
     })
   );
+
+  const _linkAccount = adapter.linkAccount;
+  adapter.linkAccount = (account) => {
+    const { "not-before-policy": _, refresh_expires_in, ...data } = account;
+    return _linkAccount ? _linkAccount(data) : undefined;
+  };
+}
+
+// OAuth
+if (process.env.NEXT_PUBLIC_OAUTH_ENABLED === 'true') {
+  // xpack.security.authc.realms.jwt.jwt1:
+  // order: 1
+  // client_authentication.type: none
+  // claims.principal: sub
+  // claims.groups: roles
+  // allowed_issuer: example-cluster
+  // allowed_audiences: ["https://elasticsearch.example.com:9200"]
+
+  // {
+  //   "aud": "http://127.0.0.1:44837",
+  //   "exp": 1724751646,
+  //   "iat": 1724731843,
+  //   "iss": "dev.scribe.sh",
+  //   "nbf": 1724731833,
+  //   "roles": [
+  //     "access",
+  //     "editor",
+  //     "auditor",
+  //     "server-admin"
+  //   ],
+  //   "sub": "waiteb3",
+  //   "traits": {
+  //     "github_teams": [
+  //       "admins",
+  //       "team"
+  //     ],
+  //     "logins": [
+  //       "waiteb3"
+  //     ]
+  //   },
+  //   "username": "waiteb3"
+  // }
+  
+  providers.push({
+    id: 'teleport',
+    name: 'Teleport',
+    type: 'oauth',
+    version: '2.0',
+    wellKnown: 'https://linkwarden.dev.scribe.sh/.well-known/jwks.json',
+    jwks_endpoint: 'https://linkwarden.dev.scribe.sh/.well-known/jwks.json',
+    // authorization: {
+    //   params: {
+    //     scope: 'profile email openid',
+    //   },
+    // },
+    jwks: {
+      keys: [],
+    },
+    idToken: true,
+    checks: ['pkce', 'state'],
+    // clientId: 'myClientId',
+    // client: {
+    //   token_endpoint_auth_method: 'private_key_jwt',
+    // },
+  });
 
   const _linkAccount = adapter.linkAccount;
   adapter.linkAccount = (account) => {
