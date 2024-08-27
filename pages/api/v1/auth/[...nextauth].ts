@@ -45,7 +45,6 @@ import MailchimpProvider from "next-auth/providers/mailchimp";
 import MailRuProvider from "next-auth/providers/mailru";
 import NaverProvider from "next-auth/providers/naver";
 import NetlifyProvider from "next-auth/providers/netlify";
-import OAuthProvider from "next-auth/providers/oauth";
 import OktaProvider from "next-auth/providers/okta";
 import OneLoginProvider from "next-auth/providers/onelogin";
 import OssoProvider from "next-auth/providers/osso";
@@ -844,28 +843,33 @@ if (process.env.NEXT_PUBLIC_OAUTH_ENABLED === 'true') {
   //   "username": "waiteb3"
   // }
   
-  providers.push({
-    id: 'teleport',
-    name: 'Teleport',
-    type: 'oauth',
-    version: '2.0',
-    wellKnown: 'https://linkwarden.dev.scribe.sh/.well-known/jwks.json',
-    jwks_endpoint: 'https://linkwarden.dev.scribe.sh/.well-known/jwks.json',
-    // authorization: {
-    //   params: {
-    //     scope: 'profile email openid',
-    //   },
-    // },
-    jwks: {
-      keys: [],
-    },
-    idToken: true,
-    checks: ['pkce', 'state'],
-    // clientId: 'myClientId',
-    // client: {
-    //   token_endpoint_auth_method: 'private_key_jwt',
-    // },
-  });
+  providers.push(
+    {
+      id: 'teleport',
+      name: 'Teleport',
+      type: "oidc",
+      issuer: 'dev.scribe.sh',
+      wellKnown: 'https://dev.scribe.sh/.well-known/openid-configuration',
+      jwks_endpoint: 'https://dev.scribe.sh/.well-known/jwks-oidc',
+      checks: ["pkce", "state"],
+      // userinfo: `${process.env.DJANGO_OAUTH_URL}/userinfo/`,
+      // token: `${process.env.DJANGO_OAUTH_URL}/token/`,
+      // authorization: {
+      //   url: `${process.env.DJANGO_OAUTH_URL}/authorize/`,
+      //   params: { scope: "openid profile email" },
+      // },
+      profile(profile, tokens) {
+        console.log(profile)
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+        };
+      },
+      // clientId: process.env.DJANGO_OAUTH_CLIENT_ID,
+      // clientSecret: process.env.DJANGO_OAUTH_CLIENT_SECRET,
+    }
+  );
 
   const _linkAccount = adapter.linkAccount;
   adapter.linkAccount = (account) => {
